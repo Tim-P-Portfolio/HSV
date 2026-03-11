@@ -17,6 +17,9 @@ struct RgbDisplay {
     timer: Timer<TIMER0>,
 }
 
+impl RgbDisplay
+
+
 #[entry]
 fn main() -> ! {
     rtt_init_print!();
