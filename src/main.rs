@@ -3,7 +3,7 @@
 
 use cortex_m_rt::entry;
 use critical_section_lock_mut::LockMut;
-use embedded_hal::{delay::DelayNs, digital::OutputPin};
+use embedded_hal::{delay::DelayNs, digital::{OutputPin, InputPin}};
 use hsv::*;
 use microbit::{
     board::Board,
@@ -12,6 +12,7 @@ use microbit::{
     pac, pac::interrupt,
     pac::TIMER0,
 };
+
 use panic_rtt_target as _;
 use rtt_target::{rprintln, rtt_init_print};
 
@@ -117,6 +118,9 @@ fn main() -> ! {
     unsafe { pac::NVIC::unmask(pac::Interrupt::TIMER0) };
     pac::NVIC::unpend(pac::Interrupt::TIMER0);
 
+    let mut button_a = board.buttons.button_a.into_pullup_input();
+    let mut button_b = board.buttons.button_b.into_pullup_input();
+    display.show(&mut timer1, [[1; 5]; 5], 1000);
     loop {
         let button_a_pressed = button_a.is_low().unwrap();
         let button_b_pressed = button_b.is_low().unwrap();
@@ -133,6 +137,8 @@ fn main() -> ! {
         });
 
         rprintln!("potentiometer: {}, hue: {}", potentiometer, hue);
+
+        
         timer1.delay_ms(20);
     }
 }
