@@ -102,20 +102,25 @@ fn main() -> ! {
     let mut reader =
         microbit::hal::Saadc::new(board.ADC, microbit::hal::saadc::SaadcConfig::default());
 
-    let mut display = RgbDisplay::new([r_pin, g_pin, b_pin], timer0);
-    display.set(&Hsv {
+    let mut display = microbit::display::blocking::Display::new(board.display_pins);
+
+    let mut led = RgbDisplay::new([r_pin, g_pin, b_pin], timer0);
+    led.set(&Hsv {
         h: 0.0,
         s: 1.0,
         v: 0.5,
     });
 
-    DISPLAY.init(display);
+    DISPLAY.init(led);
     DISPLAY.with_lock(|d| d.start());
 
     unsafe { pac::NVIC::unmask(pac::Interrupt::TIMER0) };
     pac::NVIC::unpend(pac::Interrupt::TIMER0);
 
     loop {
+        let button_a_pressed = button_a.is_low().unwrap();
+        let button_b_pressed = button_b.is_low().unwrap();
+
         let potentiometer = reader.read_channel(&mut p2).unwrap();
         let hue = (potentiometer as f32 / 16384.0) as f32;
 
