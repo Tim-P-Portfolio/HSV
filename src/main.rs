@@ -102,9 +102,30 @@ fn main() -> ! {
     let mut reader =
         microbit::hal::Saadc::new(board.ADC, microbit::hal::saadc::SaadcConfig::default());
 
+    let mut display = RgbDisplay::new([r_pin, g_pin, b_pin], timer0);
+    display.set(&Hsv {
+        h: 0.0,
+        s: 1.0,
+        v: 0.5,
+    });
+
+    DISPLAY.init(display);
+    DISPLAY.with_lock(|d| d.start());
+
+    unsafe { pac::NVIC::unmask(pac::Interrupt::TIMER0) };
+    pac::NVIC::unpend(pac::Interrupt::TIMER0);
+
     loop {
         let potentiometer = reader.read_channel(&mut p2).unwrap();
         let hue = (potentiometer as f32 / 16384.0) as f32;
+
+        DISPLAY.with_lock(|d| {
+            d.set(&Hsv {
+                h: hue,
+                s: 0.5,
+                v: 0.5,
+            })
+        });
 
         rprintln!("potentiometer: {}, hue: {}", potentiometer, hue);
         timer1.delay_ms(20);
