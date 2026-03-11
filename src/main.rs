@@ -1,49 +1,39 @@
 #![no_main]
 #![no_std]
 
-
-// https://github.com/pdx-cs-rust-embedded/blinky-rs/
 use cortex_m_rt::entry;
-use embedded_hal::{digital::OutputPin, delay::DelayNs};
+use embedded_hal::{delay::DelayNs};
 use microbit::{
     board::Board,
     hal::{
         timer::Timer,
     },
 };
-use rtt_target::{rtt_init_print, rprintln};                                   
-use panic_rtt_target as _;                                                    
-
-
-enum State {
-    LedOn,
-    LedOff,
-}
+use panic_rtt_target as _;
+use rtt_target::{rprintln, rtt_init_print};
+use hsv::*;
 
 #[entry]
-fn init() -> ! {
+fn main() -> ! {
     rtt_init_print!();
-    let mut board = Board::take().unwrap();
-    let mut timer = Timer::new(board.TIMER0);
+    let board = Board::take().unwrap();
 
-    board.display_pins.col1.set_low().unwrap();
+    let r_pin = board.edge.e16.degrade();
+    let g_pin = board.edge.e09.degrade();
+    let b_pin = board.edge.e08.degrade();
+    let mut timer1 = Timer::new(board.TIMER1);
 
-    let mut state = State::LedOff;
+    let mut p2 = board.edge.e02.into_floating_input();
+    let mut reader = microbit::hal::Saadc::new(board.ADC, microbit::hal::saadc::SaadcConfig::default());
+    
 
     loop {
-        state = match state {
-            State::LedOff => {
-                board.display_pins.row1.set_high().unwrap();
-                rprintln!("high");
-                State::LedOn
-            }
-            State::LedOn => {
-                board.display_pins.row1.set_low().unwrap();
-                rprintln!("low");
-                State::LedOff
-            }
-        };
-        timer.delay_ms(500);
+        let potentiometer = reader.read_channel(&mut p2).unwrap();
+        let hue = (potentiometer as f32 / 16384.0) as f32;
+        
+        
+        rprintln!("potentiometer: {}, hue: {}", potentiometer, hue);
+        timer1.delay_ms(20);
     }
 }
 
