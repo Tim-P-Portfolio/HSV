@@ -5,7 +5,7 @@ use cortex_m_rt::entry;
 use critical_section_lock_mut::LockMut;
 use embedded_hal::delay::DelayNs;
 use hsv::*;
-use microbit::{board::Board, hal::timer::Timer, pac::TIMER0};
+use microbit::{board::Board, hal::{gpio, gpio::Pin}, hal::timer::Timer, pac::TIMER0};
 use panic_rtt_target as _;
 use rtt_target::{rprintln, rtt_init_print};
 
