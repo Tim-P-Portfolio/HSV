@@ -74,8 +74,9 @@ fn clamp_input(input: i16) -> f32 {
     (input.clamp(LO, HI) - LO) as f32 / (HI - LO) as f32
 }
 
-
-// Source used to help with implementation: https://docs.rust-embedded.org/discovery-mb2/15-interrupts/my-solution.html
+// Source used to help with implementation: 
+//  https://docs.rust-embedded.org/discovery-mb2/15-interrupts/my-solution.html
+//  https://github.com/pdx-cs-rust-embedded/mb2-grayscale
 struct RgbDisplay {
     tick: u32,
     schedule: [u32; 3],
@@ -131,7 +132,9 @@ impl RgbDisplay {
             }
         }
 
-        let next = self.schedule.iter()
+        let next = self
+            .schedule
+            .iter()
             .filter(|&&t| t > self.tick)
             .copied()
             .min()
@@ -184,20 +187,32 @@ fn main() -> ! {
     let mut button_b = board.buttons.button_b.into_pullup_input();
 
     let mut component = Component::H;
-    let mut hsv = Hsv { h: 0.0, s: 1.0, v: 0.5 };
+    let mut hsv = Hsv {
+        h: 0.0,
+        s: 1.0,
+        v: 0.5,
+    };
     let mut a_state = false;
     let mut b_state = false;
-    
+
     loop {
         let a_pressed = button_a.is_low().unwrap();
         let b_pressed = button_b.is_low().unwrap();
 
-        if a_pressed && !a_state { component = component.prev(); rprintln!("PREV"); }
-        if b_pressed && !b_state { component = component.next(); rprintln!("NEXT"); }
+        if a_pressed && !a_state {
+            component = component.prev();
+            rprintln!("PREV");
+        }
+        if b_pressed && !b_state {
+            component = component.next();
+            rprintln!("NEXT");
+        }
+
+        // Trigger only when the button was not previously pressed
         a_state = a_pressed;
         b_state = b_pressed;
 
-
+        // Read from ADC on edge pin 2
         let potentiometer = reader.read_channel(&mut p2).unwrap();
         let input = clamp_input(potentiometer);
         match component {
@@ -206,17 +221,19 @@ fn main() -> ! {
             Component::V => hsv.v = input,
         }
 
-        DISPLAY.with_lock(|d| {
-            d.set(&hsv)
-        });
-        
+        DISPLAY.with_lock(|d| d.set(&hsv));
+
         let letter = match component {
             Component::H => H,
             Component::S => S,
             Component::V => V,
         };
-        rprintln!("potentiometer: {}, input: {}, letter: {:?}", potentiometer, input, component);
+        rprintln!(
+            "potentiometer: {}, input: {}, letter: {:?}",
+            potentiometer,
+            input,
+            component,
+        );
         display.show(&mut timer1, letter, 100);
-
     }
 }
