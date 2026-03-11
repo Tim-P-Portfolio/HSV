@@ -183,7 +183,7 @@ fn main() -> ! {
     let mut button_a = board.buttons.button_a.into_pullup_input();
     let mut button_b = board.buttons.button_b.into_pullup_input();
 
-    let component = Component::H;
+    let mut component = Component::H;
     let mut hsv = Hsv { h: 0.0, s: 1.0, v: 0.5 };
     let mut a_state = false;
     let mut b_state = false;
@@ -192,8 +192,8 @@ fn main() -> ! {
         let a_pressed = button_a.is_low().unwrap();
         let b_pressed = button_b.is_low().unwrap();
 
-        if a_pressed && !a_state { component.next(); rprintln!("NEXT"); }
-        if b_pressed && !b_state { component.prev(); rprintln!("PREV"); }
+        if a_pressed && !a_state { component = component.prev(); rprintln!("PREV"); }
+        if b_pressed && !b_state { component = component.next(); rprintln!("NEXT"); }
         a_state = a_pressed;
         b_state = b_pressed;
 
