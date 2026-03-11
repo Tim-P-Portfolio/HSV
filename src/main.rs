@@ -17,7 +17,11 @@ struct RgbDisplay {
     timer: Timer<TIMER0>,
 }
 
-impl RgbDisplay
+impl RgbDisplay {
+    fn new<T>(pins: [Pin<gpio::T>; 3]) {}
+
+    
+}
 
 
 #[entry]
