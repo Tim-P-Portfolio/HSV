@@ -7,7 +7,8 @@ Cycles HSV based on potentiometer rotation
 ## Build and Run
 Run with `cargo run --release`
 
-![HSV](https://github.com/Tim-P-Portfolio/HSV/blob/main/hsv-cycle.gif?raw=true)
+<img src = "https://github.com/Tim-P-Portfolio/HSV/blob/main/hsv-cycle.gif?raw=true" width="400px">  
+<img src = "https://github.com/Tim-P-Portfolio/HSV/blob/main/PXL_20260311_195120690.RAW-01.MP.COVER.jpg?raw=true" width="400px">  
 
 ## Helpful sources:
 https://github.com/pdx-cs-rust-embedded/mb2-grayscale/
