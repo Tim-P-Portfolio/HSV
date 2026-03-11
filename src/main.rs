@@ -9,11 +9,17 @@ use microbit::{
     board::Board,
     hal::timer::Timer,
     hal::{gpio, gpio::Level, gpio::Pin},
-    pac,
+    pac, pac::interrupt,
     pac::TIMER0,
 };
 use panic_rtt_target as _;
 use rtt_target::{rprintln, rtt_init_print};
+
+
+const FRAME_TICKS: u32 = 256;
+const TICK_US: u32 = 50;
+
+
 
 struct RgbDisplay {
     tick: u32,
@@ -34,9 +40,26 @@ impl RgbDisplay {
             timer,
         }
     }
+    fn start(&mut self) {
+        self.tick = 0;
+        self.timer.enable_interrupt();
+        self.timer.start(TICK_US);
+    }
+
+    fn stop(&mut self) {
+        self.timer.disable_interrupt();
+    }
+
 
     fn set(&mut self, hsv: &Hsv) {}
     fn step(&mut self) {}
+}
+
+static DISPLAY: LockMut<RgbDisplay> = LockMut::new();
+
+#[interrupt]
+fn TIMER0() {
+    DISPLAY.with_lock(|d| d.step());
 }
 
 #[entry]
