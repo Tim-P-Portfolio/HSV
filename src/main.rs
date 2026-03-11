@@ -73,6 +73,8 @@ fn clamp_input(input: i16) -> f32 {
     const HI: i16 = 16200;
     (input.clamp(LO, HI) - LO) as f32 / (HI - LO) as f32
 }
+
+
 // Source used to help with implementation: https://docs.rust-embedded.org/discovery-mb2/15-interrupts/my-solution.html
 struct RgbDisplay {
     tick: u32,
@@ -97,7 +99,7 @@ impl RgbDisplay {
     fn start(&mut self) {
         self.tick = 0;
         self.timer.enable_interrupt();
-        self.timer.start(TICK_US);
+        self.step();
     }
 
     fn stop(&mut self) {
@@ -128,9 +130,16 @@ impl RgbDisplay {
                 let _ = pin.set_low();
             }
         }
-        self.tick = (self.tick + 1) % FRAME_TICKS;
+
+        let next = self.schedule.iter()
+            .filter(|&&t| t > self.tick)
+            .copied()
+            .min()
+            .unwrap_or(FRAME_TICKS);
+        let delay = (next - self.tick) * TICK_US;
+        self.tick = if next >= FRAME_TICKS { 0 } else { next };
         self.timer.reset_event();
-        self.timer.start(TICK_US);
+        self.timer.start(delay);
     }
 }
 
@@ -173,24 +182,35 @@ fn main() -> ! {
 
     let mut button_a = board.buttons.button_a.into_pullup_input();
     let mut button_b = board.buttons.button_b.into_pullup_input();
-    display.show(&mut timer1, H, 1000);
+
+    let component = Component::H;
+    let mut hsv = Hsv { h: 0.0, s: 1.0, v: 0.5 };
+    
     loop {
         let button_a_pressed = button_a.is_low().unwrap();
         let button_b_pressed = button_b.is_low().unwrap();
 
         let potentiometer = reader.read_channel(&mut p2).unwrap();
-        let hue = (potentiometer as f32 / 16384.0) as f32;
+        let input = clamp_input(potentiometer);
+        match component {
+            Component::H => hsv.h = input,
+            Component::S => hsv.s = input,
+            Component::V => hsv.v = input,
+        }
 
         DISPLAY.with_lock(|d| {
-            d.set(&Hsv {
-                h: hue,
-                s: 0.5,
-                v: 0.5,
-            })
+            d.set(&hsv)
         });
 
-        rprintln!("potentiometer: {}, hue: {}", potentiometer, hue);
+        
 
-        timer1.delay_ms(20);
+        let letter = match component {
+            Component::H => H,
+            Component::S => S,
+            Component::V => V,
+        };
+        rprintln!("potentiometer: {}, input: {}, letter: {}", potentiometer, input, component);
+        display.show(&mut timer1, H, 100);
+
     }
 }
