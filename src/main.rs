@@ -45,6 +45,34 @@ const V: [[u8; 5]; 5] = [
     [0, 0, 1, 0, 0],
 ];
 
+#[derive(Clone, Copy)]
+enum Component {
+    H,
+    S,
+    V,
+}
+impl Component {
+    fn prev(self) -> Self {
+        match self {
+            Self::H => Self::V,
+            Self::V => Self::S,
+            Self::S => Self::H,
+        }
+    }
+    fn next(self) -> Self {
+        match self {
+            Self::H => Self::S,
+            Self::S => Self::V,
+            Self::V => Self::H,
+        }
+    }
+}
+
+fn clamp_input(input: i16) -> f32 {
+    const LO: i16 = 200;
+    const HI: i16 = 16200;
+    (input.clamp(LO, HI) - LO) as f32 / (HI - LO) as f32
+}
 // Source used to help with implementation: https://docs.rust-embedded.org/discovery-mb2/15-interrupts/my-solution.html
 struct RgbDisplay {
     tick: u32,
