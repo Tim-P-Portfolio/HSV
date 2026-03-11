@@ -45,7 +45,7 @@ const V: [[u8; 5]; 5] = [
     [0, 0, 1, 0, 0],
 ];
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 enum Component {
     H,
     S,
@@ -185,10 +185,18 @@ fn main() -> ! {
 
     let component = Component::H;
     let mut hsv = Hsv { h: 0.0, s: 1.0, v: 0.5 };
+    let mut a_state = false;
+    let mut b_state = false;
     
     loop {
-        let button_a_pressed = button_a.is_low().unwrap();
-        let button_b_pressed = button_b.is_low().unwrap();
+        let a_pressed = button_a.is_low().unwrap();
+        let b_pressed = button_b.is_low().unwrap();
+
+        if a_pressed && !a_state { component.next(); rprintln!("NEXT"); }
+        if b_pressed && !b_state { component.prev(); rprintln!("PREV"); }
+        a_state = a_pressed;
+        b_state = b_pressed;
+
 
         let potentiometer = reader.read_channel(&mut p2).unwrap();
         let input = clamp_input(potentiometer);
@@ -201,16 +209,14 @@ fn main() -> ! {
         DISPLAY.with_lock(|d| {
             d.set(&hsv)
         });
-
         
-
         let letter = match component {
             Component::H => H,
             Component::S => S,
             Component::V => V,
         };
-        rprintln!("potentiometer: {}, input: {}, letter: {}", potentiometer, input, component);
-        display.show(&mut timer1, H, 100);
+        rprintln!("potentiometer: {}, input: {}, letter: {:?}", potentiometer, input, component);
+        display.show(&mut timer1, letter, 100);
 
     }
 }
