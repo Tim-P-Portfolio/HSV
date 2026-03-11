@@ -3,22 +3,47 @@
 
 use cortex_m_rt::entry;
 use critical_section_lock_mut::LockMut;
-use embedded_hal::{delay::DelayNs, digital::{OutputPin, InputPin}};
+use embedded_hal::{
+    delay::DelayNs,
+    digital::{InputPin, OutputPin},
+};
 use hsv::*;
 use microbit::{
     board::Board,
     hal::timer::Timer,
     hal::{gpio, gpio::Level, gpio::Pin},
-    pac, pac::interrupt,
+    pac,
+    pac::interrupt,
     pac::TIMER0,
 };
 
 use panic_rtt_target as _;
 use rtt_target::{rprintln, rtt_init_print};
 
+const FRAME_TICKS: u32 = 100;
+const TICK_US: u32 = 100;
 
-const FRAME_TICKS: u32 = 256;
-const TICK_US: u32 = 50;
+const H: [[u8; 5]; 5] = [
+    [0, 1, 0, 1, 0],
+    [0, 1, 0, 1, 0],
+    [0, 1, 1, 1, 0],
+    [0, 1, 0, 1, 0],
+    [0, 1, 0, 1, 0],
+];
+const S: [[u8; 5]; 5] = [
+    [0, 1, 1, 1, 0],
+    [0, 1, 0, 0, 0],
+    [0, 1, 1, 1, 0],
+    [0, 0, 0, 1, 0],
+    [0, 1, 1, 1, 0],
+];
+const V: [[u8; 5]; 5] = [
+    [0, 1, 0, 1, 0],
+    [0, 1, 0, 1, 0],
+    [0, 1, 0, 1, 0],
+    [0, 1, 0, 1, 0],
+    [0, 0, 1, 0, 0],
+];
 
 // Source used to help with implementation: https://docs.rust-embedded.org/discovery-mb2/15-interrupts/my-solution.html
 struct RgbDisplay {
@@ -55,9 +80,9 @@ impl RgbDisplay {
         let rgb = hsv.to_rgb();
         // Schedule with rgb value
         self.next_schedule = Some([
-            (rgb.r * 255.0) as u32,
-            (rgb.g * 255.0) as u32,
-            (rgb.b * 255.0) as u32,
+            (rgb.r * FRAME_TICKS as f32) as u32,
+            (rgb.g * FRAME_TICKS as f32) as u32,
+            (rgb.b * FRAME_TICKS as f32) as u32,
         ]);
     }
 
@@ -120,7 +145,7 @@ fn main() -> ! {
 
     let mut button_a = board.buttons.button_a.into_pullup_input();
     let mut button_b = board.buttons.button_b.into_pullup_input();
-    display.show(&mut timer1, [[1; 5]; 5], 1000);
+    display.show(&mut timer1, H, 1000);
     loop {
         let button_a_pressed = button_a.is_low().unwrap();
         let button_b_pressed = button_b.is_low().unwrap();
@@ -138,7 +163,6 @@ fn main() -> ! {
 
         rprintln!("potentiometer: {}, hue: {}", potentiometer, hue);
 
-        
         timer1.delay_ms(20);
     }
 }
