@@ -1,3 +1,0 @@
-cargo:rustc-link-search=/home/tmpk/HSV/hsv/target/thumbv7em-none-eabihf/release/build/nrf52833-pac-9054e7dfeb941e1d/out
-cargo:rerun-if-changed=device.x
-cargo:rerun-if-changed=build.rs

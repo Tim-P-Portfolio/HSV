@@ -20,3 +20,4 @@ https://github.com/pdx-cs-rust-embedded/mb2-lsm-gpio/
 
 
 ## How it went 
+It was a smooth process the documentation on interrupts was very clear.
