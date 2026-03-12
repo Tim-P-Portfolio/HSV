@@ -1,0 +1,3 @@
+cargo:rustc-link-search=/home/tmpk/HSV/hsv/target/thumbv7em-none-eabihf/release/build/nrf52833-hal-7ddd0ad75e92500c/out
+cargo:rerun-if-changed=build.rs
+cargo:rerun-if-changed=memory.x
